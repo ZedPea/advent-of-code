@@ -1,10 +1,5 @@
-import Data.List (permutations)
+import Data.List (nub, sort)
+import Control.Applicative (liftA2)
 
 main :: IO ()
-main = print =<< length . filter isValid . map words . lines <$> getContents
-
-isValid :: [String] -> Bool
-isValid [] = True
-isValid (x:xs)
-    | any (\y -> x `elem` y) (map permutations xs) = False
-    | otherwise = isValid xs
+main = print =<< length . filter (liftA2 (==) length (length . nub . map sort)) . map words . lines <$> getContents
