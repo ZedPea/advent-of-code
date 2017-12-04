@@ -1,6 +1,5 @@
 import Data.List (nub)
+import Control.Applicative (liftA2)
 
 main :: IO ()
-main = do
-    input <- map words . lines <$> getContents
-    print . length $ filter (\xs -> length xs == length (nub xs)) input
+main = print =<< length . filter (liftA2 (==) length (length . nub)) . map words . lines <$> getContents

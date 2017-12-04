@@ -1,9 +1,7 @@
 import Data.List (permutations)
 
 main :: IO ()
-main = do
-    input <- map words . lines <$> getContents
-    print . length $ filter isValid input
+main = print =<< length . filter isValid . map words . lines <$> getContents
 
 isValid :: [String] -> Bool
 isValid [] = True
