@@ -20,6 +20,6 @@ jmp' offset vec
     | offset < 0 || offset >= M.length vec = return 0
     | otherwise = do
         jmpVal <- M.read vec offset
-        M.modify vec (\x -> x + 1) offset
+        M.modify vec (\x -> x + (if jmpVal >= 3 then (-1) else 1)) offset
         nextVal <- jmp' (offset + jmpVal) vec
         return $ 1 + nextVal
