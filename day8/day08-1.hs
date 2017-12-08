@@ -1,61 +1,45 @@
 import Data.Map.Lazy (Map, empty, insert, adjust, elems, (!))
-import Data.Char (isAlpha)
-import Data.List (isPrefixOf, tails, stripPrefix, isInfixOf)
-import Data.Maybe (fromJust)
+import Data.List (isInfixOf)
 
 main :: IO ()
 main = print =<< getMaxRegisterVal . lines <$> getContents
 
 getMaxRegisterVal :: [String] -> Int
-getMaxRegisterVal input = maxMapVal result
-    where result = processInstructions input $ mkRegisters input
-
-mkRegisters :: [String] -> Map String Int
-mkRegisters = foldl insertRegister empty
+getMaxRegisterVal input = processInstructions $ mkRegisters input
+    where mkRegisters = foldl insertRegister empty
+          processInstructions mapping = maximum . elems $
+            foldl processInstruction mapping input
 
 insertRegister :: Map String Int -> String -> Map String Int
-insertRegister mapping xs = insert second 0 $ insert first 0 mapping
-    where (first, second) = parseRegisters xs
-
-processInstructions :: [String] -> Map String Int -> Map String Int
-processInstructions input mapping = foldl processInstruction mapping input
+insertRegister mapping xs = insert secondReg 0 $ insert firstReg 0 mapping
+    where (firstReg, _, secondReg, _, _) = parseInstruction xs
 
 processInstruction :: Map String Int -> String -> Map String Int
 processInstruction mapping instruction
-    | secondVal `operator` val = adjust (+ incrementVal) first mapping
+    | (mapping ! secondReg) `operator` secondNum = newMapping
     | otherwise = mapping
-    where (first, second) = parseRegisters instruction
-          secondVal = mapping ! second
-          operator = parseOperator instruction
-          val = read . reverse . takeWhile isNumVal $ reverse instruction
-          incrementVal = parseIncrementVal instruction
+    where newMapping = adjust (+firstNum) firstReg mapping
 
-parseRegisters :: String -> (String, String)
-parseRegisters xs = (first, second)
-    where first = takeWhile isAlpha xs
-          second = takeWhile isAlpha stripped
-          stripped = fromJust $ stripPrefix "if " targetStr
-          targetStr = head . filter ("if " `isPrefixOf`) $ tails xs
+          (firstReg, firstNum, secondReg, operator, secondNum) 
+            = parseInstruction instruction
 
 parseOperator :: (Ord a) => String -> (a -> a -> Bool)
-parseOperator xs
-    | ">=" `isInfixOf` xs = (>=)
-    | "<=" `isInfixOf` xs = (<=)
-    | "==" `isInfixOf` xs = (==)
-    | "!=" `isInfixOf` xs = (/=)
-    | ">"  `isInfixOf` xs = (>)
-    | "<"  `isInfixOf` xs = (<)
-    | otherwise = error "Expected operator not found!"
+parseOperator ">=" = (>=)
+parseOperator "<=" = (<=)
+parseOperator "==" = (==)
+parseOperator "!=" = (/=)
+parseOperator ">"  = (>)
+parseOperator "<"  = (<)
 
-parseIncrementVal :: String -> Int
-parseIncrementVal xs 
-    | "inc" `isInfixOf` xs = val
-    | otherwise = -val
-    where val = read . takeWhile isNumVal $ dropWhile (not . isNumVal) xs
+parseInstruction :: String -> (String, Int, String, Int -> Int -> Bool, Int)
+parseInstruction xs = (firstReg, firstNum, secondReg, operator, secondNum)
+    where split = words xs
+          firstReg = head split
 
-maxMapVal :: Map String Int -> Int
-maxMapVal = maximum . elems
+          firstNum
+            | "inc" `isInfixOf` xs = read $ split !! 2
+            | otherwise = -(read $ split !! 2)
 
-isNumVal :: Char -> Bool
-isNumVal = (`elem` numVals)
-    where numVals = '-' : ['0'..'9']
+          secondReg = split !! 4
+          operator = parseOperator $ split !! 5
+          secondNum = read $ split !! 6
