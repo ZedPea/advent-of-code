@@ -1,5 +1,5 @@
-import Data.List.Split (splitOn, chunksOf)
 import Control.Arrow (first)
+import Data.List.Split (chunksOf)
 import Data.Tuple.Curry (uncurryN)
 import Data.Tuple.Select (sel3)
 import Data.Char (ord, chr, toLower)
